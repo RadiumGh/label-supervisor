@@ -16,3 +16,12 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}

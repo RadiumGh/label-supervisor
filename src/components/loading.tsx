@@ -1,17 +1,18 @@
-import { Typography } from '@mui/joy'
+import { CircularProgress, styled } from '@mui/joy'
 
-export function LoadingPage() {
+const Container = styled('div')`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  height: 300px;
+`
+
+export function Loading() {
   return (
-    <Typography
-      sx={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      loading product...
-    </Typography>
+    <Container>
+      <CircularProgress size="lg" />
+    </Container>
   )
 }

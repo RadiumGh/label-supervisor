@@ -1,14 +1,8 @@
 import axios from 'axios'
-import { mockState } from './mock.ts'
-import { asyncDelay } from './utils.ts'
 
-const mockRequests = true
+export const MOCK_RESPONSES = true
+const SERVER_BASE_URL = 'http://localhost:3000'
 
-export const fetchDataRequest = async (productId: string) => {
-  if (mockRequests) {
-    await asyncDelay(500)
-    return mockState
-  }
-
-  return axios.get(`/product/${productId}`)
-}
+export const axiosClient = axios.create({
+  baseURL: SERVER_BASE_URL,
+})
