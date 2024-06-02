@@ -9,10 +9,11 @@ import {
   UpdateProductMasterProductDTO,
 } from './types'
 import {
-  PRODUCT_BUCKET_SIZE,
   searchProductsRequest,
   updateProductMasterProductRequest,
+  PRODUCT_BUCKET_SIZE,
 } from './product.api'
+import { showToast } from '../components/toast'
 
 export function useSearchProducts(
   filter: ProductStatusType = ProductStatusType.PENDING,
@@ -43,9 +44,21 @@ export function useUpdateProductMasterProduct() {
     }: UpdateProductMasterProductDTO) =>
       updateProductMasterProductRequest({ id: productId, masterProductId }),
 
-    onSuccess: () => {
-      console.log('>>>> useUpdateProductMasterProduct > onSuccess')
-      queryClient.invalidateQueries({ queryKey: ['products'] })
+    onSuccess: product => {
+      showToast('Product Updated', 'success')
+
+      queryClient.setQueriesData(
+        { queryKey: ['products'] },
+        (oldData: { pages: Array<Product[]> } | undefined) => {
+          if (!oldData) return undefined
+          return {
+            ...oldData,
+            pages: oldData.pages.map(page =>
+              page.map(p => (p.id === product.id ? product : p)),
+            ),
+          }
+        },
+      )
     },
   })
 }

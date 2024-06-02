@@ -1,15 +1,30 @@
 import { Waypoint } from 'react-waypoint'
-import { forwardRef, RefObject, useMemo } from 'react'
+import {
+  forwardRef,
+  RefObject,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   Autocomplete,
   AutocompleteOption,
-  createFilterOptions,
+  CircularProgress,
   ListItemDecorator,
+  Typography,
 } from '@mui/joy'
 import { AddRounded } from '@mui/icons-material'
-import { MasterProduct, useSearchMasterProducts } from '../../../logic'
+import {
+  MasterProduct,
+  useDebounce,
+  useSearchMasterProducts,
+} from '../../../logic'
 
-const filterOptions = createFilterOptions<IMasterProductOption>()
+export interface MasterProductsAutoCompleteAPI {
+  focus: () => void
+}
 
 interface IMasterProductOption extends MasterProduct {
   inputValue?: string
@@ -25,8 +40,20 @@ export const MasterProductsAutoComplete = forwardRef(function (
   { value, productId, onValueChange }: Props,
   ref,
 ) {
-  const { data, isLoading, hasNextPage, fetchNextPage } =
+  const inputRef = useRef<HTMLInputElement>()
+  const [open, setOpen] = useState(false)
+
+  const [inputValue, setInputValue] = useState('')
+  const [inputIsChanging, setInputIsChanging] = useState(false)
+  const debouncedQuery = useDebounce(inputValue)
+
+  useEffect(() => {
+    setInputIsChanging(false)
+  }, [debouncedQuery])
+
+  const { data, isFetching, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useSearchMasterProducts({
+      search: debouncedQuery,
       similarTo: productId,
     })
 
@@ -35,29 +62,60 @@ export const MasterProductsAutoComplete = forwardRef(function (
     [data],
   )
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus() {
+        inputRef?.current?.focus()
+        setOpen(true)
+      },
+    }),
+    [],
+  )
+
+  const isLoading = inputIsChanging || (isFetching && !isFetchingNextPage)
+
   return (
     <Autocomplete
-      slotProps={{ input: { ref: ref as RefObject<HTMLInputElement> } }}
+      open={open}
+      slotProps={{ input: { ref: inputRef as RefObject<HTMLInputElement> } }}
       value={value}
       loading={isLoading}
-      options={items}
-      getOptionLabel={option =>
-        typeof option === 'string'
-          ? option
-          : option.name
-            ? option.name
-            : 'inputValue' in option
-              ? (option.inputValue as string)
-              : ''
+      onOpen={() => setOpen(true)}
+      onClose={() => setOpen(false)}
+      loadingText={
+        <AutocompleteOption sx={{ pointerEvents: 'none' }}>
+          <ListItemDecorator>
+            <CircularProgress size="sm" color="neutral" />
+          </ListItemDecorator>
+          Loading...
+        </AutocompleteOption>
       }
+      inputValue={inputValue}
+      onInputChange={(_, newInputValue) => {
+        setInputValue(newInputValue)
+        setInputIsChanging(true)
+      }}
+      options={isLoading ? [] : items}
+      // eslint-disable-next-line
+      // @ts-ignore
+      getOptionLabel={(option: IMasterProductOption) => {
+        if (option.id === -1) return option.name
+        if (option.inputValue) return option.inputValue as string
+        if (option.categoryName)
+          return `[${option.categoryName}] ${option.name}`
+
+        return option.name
+      }}
       isOptionEqualToValue={(option, value) => option.id === value.id}
-      filterOptions={(options, params) => {
-        const filtered = filterOptions(options, params)
+      filterOptions={(options: IMasterProductOption[], params) => {
+        if (isLoading) return []
+
         const { inputValue } = params
 
         const isExisting = options.some(option => inputValue === option.name)
         if (inputValue !== '' && !isExisting) {
-          filtered.push({
+          options.push({
             id: -1,
             inputValue,
             name: `Add "${inputValue}"`,
@@ -65,13 +123,13 @@ export const MasterProductsAutoComplete = forwardRef(function (
         }
 
         if (hasNextPage)
-          filtered.push({
+          options.push({
             id: -1,
             name: 'loading more...',
             isLoading: true,
           })
 
-        return filtered
+        return options
       }}
       onChange={(_, option) => {
         if (!option) onValueChange(undefined)
@@ -89,8 +147,14 @@ export const MasterProductsAutoComplete = forwardRef(function (
       renderOption={(props, option: IMasterProductOption) => {
         if (option.isLoading)
           return (
-            <Waypoint onEnter={() => fetchNextPage()}>
-              <AutocompleteOption {...props}>{option.name}</AutocompleteOption>
+            <Waypoint onEnter={() => fetchNextPage()} {...props}>
+              <AutocompleteOption {...props}>
+                <ListItemDecorator>
+                  <CircularProgress size="sm" color="neutral" />
+                </ListItemDecorator>
+
+                {option.name}
+              </AutocompleteOption>
             </Waypoint>
           )
 
@@ -102,7 +166,15 @@ export const MasterProductsAutoComplete = forwardRef(function (
               </ListItemDecorator>
             )}
 
-            {option.name}
+            <Typography textAlign="start">
+              {option.categoryName && (
+                <Typography sx={{ fontWeight: 600, mr: 0.5 }}>
+                  [{option.categoryName}]
+                </Typography>
+              )}
+
+              <Typography sx={{ fontWeight: 200 }}>{option.name}</Typography>
+            </Typography>
           </AutocompleteOption>
         )
       }}

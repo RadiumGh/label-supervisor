@@ -10,6 +10,7 @@ export interface CreateMasterProductDTO {
 export interface MasterProduct {
   id: number
   name: string
+  categoryName?: string
 }
 
 export interface UpdateProductMasterProductDTO {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Input, styled } from '@mui/joy'
 import { Waypoint } from 'react-waypoint'
 import { ProductCard } from './product-card'
@@ -32,10 +32,18 @@ export function ProductList({ filter }: Props) {
 
   const {
     data: productPages,
-    isLoading,
+    isFetching,
+    isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
   } = useSearchProducts(filter, Number(startId))
+
+  const isLoading = isFetching && !isFetchingNextPage
+
+  const pagesToRender = useMemo(() => {
+    if (!productPages?.pages?.length) return []
+    return productPages.pages
+  }, [productPages])
 
   return (
     <Container>
@@ -56,7 +64,7 @@ export function ProductList({ filter }: Props) {
         <NoResult />
       ) : (
         <ListContainer>
-          {productPages?.pages.map(page =>
+          {pagesToRender.map(page =>
             page.map(product => (
               <ProductCard key={product.id} product={product} />
             )),

@@ -1,7 +1,6 @@
 import { MasterProduct } from './types'
-import { axiosClient, MOCK_RESPONSES } from './api'
 import { mockedMasterProducts } from './mock'
-import { asyncDelay } from './utils'
+import { axiosClient, MOCK_RESPONSES, waitForMockedDelay } from './api'
 
 export const MASTER_PRODUCT_BUCKET_SIZE = 20
 
@@ -15,8 +14,17 @@ export async function searchMasterProductsRequest({
   search?: string
 }) {
   if (MOCK_RESPONSES) {
-    await asyncDelay(1000)
-    return mockedMasterProducts.slice(skip, skip + MASTER_PRODUCT_BUCKET_SIZE)
+    await waitForMockedDelay()
+    const slice = mockedMasterProducts.slice(
+      skip,
+      skip + MASTER_PRODUCT_BUCKET_SIZE,
+    )
+
+    return !search
+      ? slice
+      : slice.filter(({ name }) =>
+          name.toLowerCase().includes(search.toLowerCase()),
+        )
   }
 
   const res = await axiosClient.get('/master', {
@@ -28,8 +36,11 @@ export async function searchMasterProductsRequest({
 
 export async function createMasterProductRequest({ name }: { name: string }) {
   if (MOCK_RESPONSES) {
-    await asyncDelay(1000)
-    return { id: Date.now(), name } as MasterProduct
+    await waitForMockedDelay()
+    const createdMock = { id: Date.now(), name } as MasterProduct
+
+    mockedMasterProducts.push(createdMock)
+    return createdMock
   }
 
   const res = await axiosClient.post('/master', { name })
@@ -38,7 +49,13 @@ export async function createMasterProductRequest({ name }: { name: string }) {
 
 export async function deleteMasterProductRequest({ id }: { id: number }) {
   if (MOCK_RESPONSES) {
-    await asyncDelay(1000)
+    await waitForMockedDelay()
+
+    const indexToDelete = mockedMasterProducts.findIndex(
+      product => product.id === id,
+    )
+    if (indexToDelete !== -1) mockedMasterProducts.splice(indexToDelete, 1)
+
     return 200
   }
 
@@ -54,8 +71,9 @@ export async function updateMasterProductNameRequest({
   name: string
 }) {
   if (MOCK_RESPONSES) {
-    await asyncDelay(1000)
-    return { id, name } as MasterProduct
+    await waitForMockedDelay()
+    const found = mockedMasterProducts.find(p => p.id === id)
+    return { ...found, id, name } as MasterProduct
   }
 
   const res = await axiosClient.put(`/master/${id}`, { name })

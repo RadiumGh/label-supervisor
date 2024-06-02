@@ -4,11 +4,15 @@ import {
   CircularProgress,
   IconButton,
   styled,
+  Tooltip,
   Typography,
 } from '@mui/joy'
 import EditIcon from '@mui/icons-material/EditRounded'
 import CheckIcon from '@mui/icons-material/DoneRounded'
-import { MasterProductsAutoComplete } from './master-products-auto-complete'
+import {
+  MasterProductsAutoComplete,
+  MasterProductsAutoCompleteAPI,
+} from './master-products-auto-complete'
 import {
   MasterProduct,
   Product,
@@ -16,12 +20,27 @@ import {
   useUpdateProductMasterProduct,
 } from '../../../logic'
 
+const isTouchDevice = 'ontouchstart' in window
+
 const SelectMasterProductContainer = styled('div')`
   display: flex;
   gap: 8px;
   justify-content: space-between;
   align-items: center;
   min-height: 36px;
+`
+
+const NameAndCategoryTypography = styled(Typography)`
+  &.separate-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    span,
+    p {
+      width: fit-content;
+    }
+  }
 `
 
 const StyledCard = styled(Card)`
@@ -52,7 +71,7 @@ interface Props {
 export function ProductCard({ product }: Props) {
   const { id, name, category, masterProduct } = product
 
-  const autoCompleteRef = useRef<HTMLInputElement>()
+  const autoCompleteRef = useRef<MasterProductsAutoCompleteAPI>()
   const [showEditField, setShowEditField] = useState(false)
 
   const [selectedMasterProduct, setSelectedMasterProduct] = useState<
@@ -67,7 +86,6 @@ export function ProductCard({ product }: Props) {
     updateMasterProductMutation.isPending
 
   const onMasterProductChange = (value: MasterProduct | undefined) => {
-    console.log('onMasterProductChange:', value)
     setSelectedMasterProduct(value)
 
     if (!value) return
@@ -75,7 +93,6 @@ export function ProductCard({ product }: Props) {
   }
 
   const submitChangesToMasterProduct = async (value: MasterProduct) => {
-    console.log('[][] submitChangesToMasterProduct')
     if (!value?.id) return
 
     let masterProductToSubmit = value
@@ -108,15 +125,24 @@ export function ProductCard({ product }: Props) {
   }
 
   useEffect(() => {
-    if (showEditField) autoCompleteRef?.current?.focus()
+    if (showEditField) autoCompleteRef.current?.focus()
   }, [showEditField])
 
+  const mustSeparate = category.length > 20 || name.length > 20
+  const separateNameAndCategory =
+    mustSeparate || (category?.length > 10 && name.length > 10)
+
   return (
-    <StyledCard sx={{ gap: 0 }} size="sm">
+    <StyledCard sx={{ gap: 0, p: 1.5 }}>
       <Typography level="body-xs" color="neutral" mb={0.5} textAlign="start">
         id: <b>{id}</b>
       </Typography>
-      <Typography textAlign="start" mb={3}>
+
+      <NameAndCategoryTypography
+        textAlign="start"
+        mb={3}
+        className={separateNameAndCategory ? 'separate-content' : ''}
+      >
         <Typography
           variant="solid"
           color="primary"
@@ -132,7 +158,7 @@ export function ProductCard({ product }: Props) {
         <Typography level="title-md" textAlign="start">
           {name}
         </Typography>
-      </Typography>
+      </NameAndCategoryTypography>
 
       <Typography
         sx={{ mb: 0.5, width: 'fit-content' }}
@@ -156,10 +182,18 @@ export function ProductCard({ product }: Props) {
             textAlign="start"
             variant="soft"
             color={masterProduct?.id ? 'primary' : 'danger'}
+            sx={{ px: 1, py: 0.5, borderRadius: '4px' }}
           >
-            {masterProduct?.name ??
-              selectedMasterProduct?.name ??
-              'Not Selected'}
+            {masterProduct?.categoryName && masterProduct.name ? (
+              <>
+                <Typography fontWeight={600}>
+                  [{masterProduct.categoryName}]
+                </Typography>{' '}
+                {masterProduct.name}
+              </>
+            ) : (
+              masterProduct?.name ?? 'Not Selected'
+            )}
           </Typography>
         )}
 
@@ -168,29 +202,35 @@ export function ProductCard({ product }: Props) {
             {submittingEdit ? (
               <CircularProgress color="neutral" size="sm" variant="soft" />
             ) : (
-              <IconButton
-                size="sm"
-                color="neutral"
-                variant="plain"
-                disabled={!selectedMasterProduct}
-                onClick={() =>
-                  submitChangesToMasterProduct(selectedMasterProduct!)
-                }
-              >
-                <CheckIcon />
-              </IconButton>
+              <Tooltip title="Submit Changes" variant="outlined">
+                <IconButton
+                  size="sm"
+                  color="neutral"
+                  variant="plain"
+                  disabled={!selectedMasterProduct}
+                  onClick={() =>
+                    submitChangesToMasterProduct(selectedMasterProduct!)
+                  }
+                >
+                  <CheckIcon />
+                </IconButton>
+              </Tooltip>
             )}
           </EditFieldDecoratorContainer>
         ) : (
-          <IconButton
-            size="sm"
-            color="neutral"
-            variant="plain"
-            onClick={switchToEditMode} // TODO: Focus autoComplete
-            className={showEditField ? '' : 'show-on-hover'}
-          >
-            <EditIcon />
-          </IconButton>
+          <Tooltip title="Select Master Product" variant="outlined">
+            <IconButton
+              size="sm"
+              color="neutral"
+              variant="plain"
+              onClick={switchToEditMode}
+              className={
+                !isTouchDevice && !showEditField ? 'show-on-hover' : ''
+              }
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
         )}
       </SelectMasterProductContainer>
     </StyledCard>

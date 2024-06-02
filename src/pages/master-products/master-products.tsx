@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react'
 import { AddRounded, SearchRounded } from '@mui/icons-material'
-import { IconButton, Input, styled, Typography } from '@mui/joy'
+import { IconButton, Input, styled, Tooltip, Typography } from '@mui/joy'
 import { MasterProductList } from './components/master-product-list'
-import { useAppStore } from '../../logic'
+import { useAppStore, useDebounce } from '../../logic'
 
 const Container = styled('div')`
   display: flex;
@@ -21,6 +21,7 @@ const HeaderContainer = styled('div')`
 
 export function MasterProducts() {
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedQuery = useDebounce(searchQuery)
 
   const openCreateMasterProductModal = useCallback(() => {
     useAppStore.setState({ createMasterProductModalIsOpen: true })
@@ -33,14 +34,16 @@ export function MasterProducts() {
           Master Products
         </Typography>
 
-        <IconButton
-          variant="soft"
-          color="primary"
-          size="sm"
-          onClick={openCreateMasterProductModal}
-        >
-          <AddRounded />
-        </IconButton>
+        <Tooltip title="Create Master Product" variant="outlined">
+          <IconButton
+            variant="soft"
+            color="primary"
+            size="sm"
+            onClick={openCreateMasterProductModal}
+          >
+            <AddRounded />
+          </IconButton>
+        </Tooltip>
       </HeaderContainer>
 
       <Input
@@ -52,7 +55,7 @@ export function MasterProducts() {
         endDecorator={<SearchRounded />}
       />
 
-      <MasterProductList searchQuery={searchQuery} />
+      <MasterProductList searchQuery={debouncedQuery} />
     </Container>
   )
 }

@@ -1,8 +1,12 @@
+import { useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Tabs, Tab, TabList, TabPanel, styled, tabClasses } from '@mui/joy'
+import { Toast } from '../components/toast'
+import { CreateMasterProductModal } from '../components/modals'
 import { Products } from './products'
 import { MasterProducts } from './master-products'
 import '../App.css'
-import { CreateMasterProductModal } from '../components/modals'
+import { useIsDesktopSize } from '../components/media-query-hooks.ts'
 
 // const Container = styled('div')`
 //   height: 100%;
@@ -32,8 +36,43 @@ const Page = styled('div')`
   width: 100%;
   height: 100%;
 
+  max-width: 460px;
+  margin: 0 auto;
+
   display: flex;
   flex-direction: column;
+`
+
+const StyledTabs = styled(Tabs)`
+  flex-direction: row;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: 0 0 10px 5px #47506112;
+
+  @media (max-width: 700px) {
+    flex-direction: column-reverse;
+  }
+`
+
+const StyledTabList = styled(TabList)`
+  padding: 8px;
+  gap: 4px;
+  width: 100%;
+  border-radius: 16px;
+
+  & > button {
+    flex-basis: 50%;
+  }
+
+  @media (min-width: 700px) {
+    padding: 12px 8px;
+    width: 220px;
+
+    & > button {
+      flex-basis: unset;
+      min-height: 46px;
+    }
+  }
 `
 
 const StyledTabPanel = styled(TabPanel)`
@@ -42,38 +81,41 @@ const StyledTabPanel = styled(TabPanel)`
 `
 
 export function App() {
+  const isDesktopSize = useIsDesktopSize()
+
+  const queryClient = useQueryClient()
+
+  const onTabChange = useCallback(
+    (newValue: string) => {
+      queryClient.resetQueries({
+        queryKey: [newValue === 'products' ? 'master-products' : 'products'],
+      })
+    },
+    [queryClient],
+  )
+
   return (
     <>
-      <Tabs
-        orientation="horizontal"
+      <StyledTabs
+        orientation={isDesktopSize ? 'vertical' : 'horizontal'}
         aria-label="App Tabs"
+        onChange={(_, newValue) => onTabChange(newValue as string)}
         defaultValue="products"
-        sx={{
-          height: '100%',
-          borderRadius: 'xl',
-          overflow: 'hidden',
-          flexDirection: 'column-reverse',
-        }}
+        sx={{ borderRadius: 'xl' }}
       >
-        <TabList
+        <StyledTabList
           disableUnderline
           sx={{
-            p: 1,
-            gap: 0.5,
-
-            borderRadius: 'xl',
-            borderBottomLeftRadius: 0,
-            borderBottomRightRadius: 0,
-
+            boxShadow: 'sm',
             bgcolor: 'background.level1',
+
+            [`& .${tabClasses.root}`]: {
+              borderRadius: 'md',
+            },
 
             [`& .${tabClasses.root}[aria-selected="true"]`]: {
               boxShadow: 'sm',
               bgcolor: 'background.surface',
-            },
-
-            ['& > button']: {
-              flexBasis: '50%',
             },
           }}
         >
@@ -84,7 +126,7 @@ export function App() {
           <Tab value="master-products" disableIndicator>
             Master Products
           </Tab>
-        </TabList>
+        </StyledTabList>
 
         <StyledTabPanel value="products">
           <Page>
@@ -97,15 +139,11 @@ export function App() {
             <MasterProducts />
           </Page>
         </StyledTabPanel>
-      </Tabs>
+      </StyledTabs>
 
       <CreateMasterProductModal />
+
+      <Toast />
     </>
   )
-
-  // <Container>
-  //   {/*<Product />*/}
-  //   {/*<ProductType />*/}
-  //   {/*<PredictedMasterCategories />*/}
-  // </Container>
 }

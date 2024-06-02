@@ -1,5 +1,7 @@
 import { Button, styled, ToggleButtonGroup } from '@mui/joy'
 import { ProductStatusType } from '../../../logic'
+import { useEffect } from 'react'
+import { queryClient } from '../../../main.tsx'
 
 const Buttons = styled(ToggleButtonGroup)`
   margin: 8px 0 20px 0;
@@ -14,6 +16,17 @@ interface PropTypes {
 }
 
 export function ProductStatus({ status, setStatus }: PropTypes) {
+  useEffect(() => {
+    queryClient.resetQueries({
+      queryKey: [
+        'products',
+        status === ProductStatusType.PENDING
+          ? ProductStatusType.COMPLETED
+          : ProductStatusType.PENDING,
+      ],
+    })
+  }, [status])
+
   return (
     <Buttons
       size="lg"

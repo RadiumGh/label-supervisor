@@ -13,10 +13,9 @@ import {
   deleteMasterProductRequest,
   searchMasterProductsRequest,
   updateMasterProductNameRequest,
+  MASTER_PRODUCT_BUCKET_SIZE,
 } from './master-product.api'
-
-// TODO: Fix
-const BUCKET_SIZE = 20
+import { showToast } from '../components/toast'
 
 export function useSearchMasterProducts({
   similarTo,
@@ -28,13 +27,13 @@ export function useSearchMasterProducts({
   return useInfiniteQuery<MasterProduct[]>({
     queryKey: ['master-products', { search, similarTo }],
     queryFn: async ({ pageParam }) => {
-      const skip = ((pageParam as number) ?? 0) * BUCKET_SIZE
+      const skip = ((pageParam as number) ?? 0) * MASTER_PRODUCT_BUCKET_SIZE
       return searchMasterProductsRequest({ search, similarTo, skip })
     },
 
     initialPageParam: 0,
     getNextPageParam: (lastPage, _, lastPageParam) => {
-      if (lastPage.length < BUCKET_SIZE) return undefined
+      if (lastPage.length < MASTER_PRODUCT_BUCKET_SIZE) return undefined
       return ((lastPageParam as number) || 0) + 1
     },
   })
@@ -47,18 +46,10 @@ export function useCreateMasterProduct() {
     mutationFn: async ({ name }: CreateMasterProductDTO) =>
       createMasterProductRequest({ name }),
 
-    onSuccess: createdMasterProduct => {
-      console.log(
-        '>>>> useCreateMasterProduct > onSuccess:',
-        createdMasterProduct,
-      )
+    onSuccess: () => {
+      showToast('Master Product Created', 'success')
 
       queryClient.invalidateQueries({ queryKey: ['master-products'] })
-      queryClient.setQueryData(
-        ['master-products'],
-        (oldMasterProducts: MasterProduct[]) =>
-          [createdMasterProduct].concat(oldMasterProducts),
-      )
     },
   })
 }
@@ -68,9 +59,19 @@ export function useDeleteMasterProduct() {
 
   return useMutation({
     mutationFn: (id: number) => deleteMasterProductRequest({ id }),
-    onSuccess: () => {
-      console.log('>>>> useDeleteMasterProduct > onSuccess')
-      queryClient.invalidateQueries({ queryKey: ['master-products'] })
+    onSuccess: (_, id) => {
+      showToast('Master Product Deleted', 'success')
+
+      queryClient.setQueriesData(
+        { queryKey: ['master-products'] },
+        (oldData: { pages: Array<MasterProduct[]> } | undefined) => {
+          if (!oldData) return undefined
+          return {
+            ...oldData,
+            pages: oldData.pages.map(page => page.filter(p => p.id !== id)),
+          }
+        },
+      )
     },
   })
 }
@@ -82,9 +83,23 @@ export function useUpdateMasterProductName() {
     mutationFn: async ({ id, name }: UpdateMasterProductDTO) =>
       updateMasterProductNameRequest({ id, name }),
 
-    onSuccess: () => {
-      console.log('>>>> useUpdateMasterProductName > onSuccess')
-      queryClient.invalidateQueries({ queryKey: ['master-products'] })
+    onSuccess: updatedMasterProduct => {
+      showToast('Master Product Name Updated', 'success')
+
+      queryClient.setQueriesData(
+        { queryKey: ['master-products'] },
+        (oldData: { pages: Array<MasterProduct[]> } | undefined) => {
+          if (!oldData) return undefined
+          return {
+            ...oldData,
+            pages: oldData.pages.map(page =>
+              page.map(p =>
+                p.id === updatedMasterProduct.id ? updatedMasterProduct : p,
+              ),
+            ),
+          }
+        },
+      )
     },
   })
 }

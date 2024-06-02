@@ -4,6 +4,8 @@ import { MasterProductCard } from './master-product-card'
 import { Loading } from '../../../components/loading'
 import { LoadingNextPage } from '../../../components/loading-next-page'
 import { useSearchMasterProducts } from '../../../logic'
+import { memo } from 'react'
+import { NoResult } from '../../../components/no-result.tsx'
 
 const Container = styled('div')`
   overflow: hidden auto;
@@ -17,12 +19,17 @@ const Container = styled('div')`
 interface Props {
   searchQuery?: string
 }
-export function MasterProductList({ searchQuery }: Props) {
-  const { data, isLoading, hasNextPage, fetchNextPage } =
+export const MasterProductList = memo(function ({ searchQuery }: Props) {
+  const { data, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useSearchMasterProducts({ search: searchQuery })
 
-  if (isLoading) return <Loading />
-  return (
+  const isLoading = isFetching && !isFetchingNextPage
+
+  return isLoading ? (
+    <Loading />
+  ) : !data?.pages[0].length ? (
+    <NoResult />
+  ) : (
     <Container>
       {data?.pages.map(page =>
         page.map(masterProduct => (
@@ -40,4 +47,4 @@ export function MasterProductList({ searchQuery }: Props) {
       )}
     </Container>
   )
-}
+})

@@ -13,7 +13,7 @@ export function NoResult() {
   return (
     <Container>
       <Typography color="neutral" level="body-lg">
-        No Result Found!
+        No Results
       </Typography>
     </Container>
   )

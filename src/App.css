@@ -4,6 +4,10 @@
   margin: 0 auto;
   padding: 1rem;
   text-align: center;
+
+  @media (min-width: 700px) {
+    max-width: 840px;
+  }
 }
 
 ::-webkit-scrollbar {
