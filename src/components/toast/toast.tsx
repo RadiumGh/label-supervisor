@@ -53,6 +53,7 @@ export function Toast() {
         vertical: 'top',
         horizontal: 'center',
       }}
+      sx={{ textAlign: 'start' }}
       onClose={closeToastAndShowNext}
     >
       {text}

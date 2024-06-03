@@ -11,7 +11,7 @@ export function Products() {
 
   return (
     <>
-      <Typography textAlign="start" level="title-md" sx={{ mb: 2 }}>
+      <Typography textAlign="start" level="title-md" sx={{ mb: 2, py: 0.5 }}>
         Products
       </Typography>
 

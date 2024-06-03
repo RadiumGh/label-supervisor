@@ -19,6 +19,7 @@ import {
   useCreateMasterProduct,
   useUpdateProductMasterProduct,
 } from '../../../logic'
+import { showMasterProductModal } from '../../../components/modals'
 
 const isTouchDevice = 'ontouchstart' in window
 
@@ -99,14 +100,15 @@ export function ProductCard({ product }: Props) {
 
     const shouldCreateFirst = value.id == -1
     if (shouldCreateFirst) {
-      const created = await createMasterProductMutation.mutateAsync({
+      const created = await showMasterProductModal({
         name: value.name,
       })
 
-      if (!created.id) {
-        setSelectedMasterProduct(masterProduct)
+      if (!created?.id) {
+        autoCompleteRef.current?.focus()
         return
       }
+
       masterProductToSubmit = created
     }
 

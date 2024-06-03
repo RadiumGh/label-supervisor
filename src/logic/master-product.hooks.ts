@@ -19,16 +19,23 @@ import { showToast } from '../components/toast'
 
 export function useSearchMasterProducts({
   similarTo,
+  categoryId,
   search,
 }: {
   similarTo?: number
+  categoryId?: number
   search?: string
 }) {
   return useInfiniteQuery<MasterProduct[]>({
-    queryKey: ['master-products', { search, similarTo }],
+    queryKey: ['master-products', { search, similarTo, categoryId }],
     queryFn: async ({ pageParam }) => {
       const skip = ((pageParam as number) ?? 0) * MASTER_PRODUCT_BUCKET_SIZE
-      return searchMasterProductsRequest({ search, similarTo, skip })
+      return searchMasterProductsRequest({
+        search,
+        similarTo,
+        categoryId,
+        skip,
+      })
     },
 
     initialPageParam: 0,
@@ -43,8 +50,8 @@ export function useCreateMasterProduct() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ name }: CreateMasterProductDTO) =>
-      createMasterProductRequest({ name }),
+    mutationFn: async ({ name, categoryId }: CreateMasterProductDTO) =>
+      createMasterProductRequest({ name, categoryId }),
 
     onSuccess: () => {
       showToast('Master Product Created', 'success')
@@ -76,15 +83,15 @@ export function useDeleteMasterProduct() {
   })
 }
 
-export function useUpdateMasterProductName() {
+export function useUpdateMasterProduct() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, name }: UpdateMasterProductDTO) =>
-      updateMasterProductNameRequest({ id, name }),
+    mutationFn: async ({ id, name, categoryId }: UpdateMasterProductDTO) =>
+      updateMasterProductNameRequest({ id, name, categoryId }),
 
     onSuccess: updatedMasterProduct => {
-      showToast('Master Product Name Updated', 'success')
+      showToast('Master Product Updated', 'success')
 
       queryClient.setQueriesData(
         { queryKey: ['master-products'] },

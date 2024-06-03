@@ -2,11 +2,12 @@ import { useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Tabs, Tab, TabList, TabPanel, styled, tabClasses } from '@mui/joy'
 import { Toast } from '../components/toast'
-import { CreateMasterProductModal } from '../components/modals'
+import { CreateCategoryModal, MasterProductModal } from '../components/modals'
 import { Products } from './products'
 import { MasterProducts } from './master-products'
+import { Categories } from './categories'
+import { useIsDesktopSize } from '../components/media-query-hooks'
 import '../App.css'
-import { useIsDesktopSize } from '../components/media-query-hooks.ts'
 
 // const Container = styled('div')`
 //   height: 100%;
@@ -87,9 +88,16 @@ export function App() {
 
   const onTabChange = useCallback(
     (newValue: string) => {
-      queryClient.resetQueries({
-        queryKey: [newValue === 'products' ? 'master-products' : 'products'],
-      })
+      // TODO: Can we do it with refetchOnMount?
+      const tabs = ['products', 'master-products', 'categories']
+
+      tabs
+        .filter(tab => tab !== newValue)
+        .forEach(tab =>
+          queryClient.resetQueries({
+            queryKey: [tab],
+          }),
+        )
     },
     [queryClient],
   )
@@ -110,6 +118,7 @@ export function App() {
             bgcolor: 'background.level1',
 
             [`& .${tabClasses.root}`]: {
+              textAlign: 'center',
               borderRadius: 'md',
             },
 
@@ -126,6 +135,10 @@ export function App() {
           <Tab value="master-products" disableIndicator>
             Master Products
           </Tab>
+
+          <Tab value="categories" disableIndicator>
+            Categories
+          </Tab>
         </StyledTabList>
 
         <StyledTabPanel value="products">
@@ -139,9 +152,16 @@ export function App() {
             <MasterProducts />
           </Page>
         </StyledTabPanel>
+
+        <StyledTabPanel value="categories">
+          <Page>
+            <Categories />
+          </Page>
+        </StyledTabPanel>
       </StyledTabs>
 
-      <CreateMasterProductModal />
+      <MasterProductModal />
+      <CreateCategoryModal />
 
       <Toast />
     </>

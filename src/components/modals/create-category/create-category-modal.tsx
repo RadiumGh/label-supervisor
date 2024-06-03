@@ -9,8 +9,8 @@ import {
   Stack,
   styled,
 } from '@mui/joy'
-import { DescriptionTypography } from '../description-typography.tsx'
-import { useAppStore, useCreateMasterProduct } from '../../logic'
+import { DescriptionTypography } from '../../description-typography.tsx'
+import { useAppStore, useCreateCategory } from '../../../logic'
 
 const ButtonsContainer = styled('div')`
   width: fit-content;
@@ -19,20 +19,18 @@ const ButtonsContainer = styled('div')`
   gap: 8px;
 `
 
-export function CreateMasterProductModal() {
+export function CreateCategoryModal() {
   const [name, setName] = useState<string>('')
 
-  const createMutation = useCreateMasterProduct()
+  const createMutation = useCreateCategory()
   const creating = createMutation.isPending
 
-  const open = useAppStore(state => state.createMasterProductModalIsOpen)
+  const open = useAppStore(state => state.createCategoryModalIsOpen)
 
   const onClose = () =>
-    useAppStore.setState({ createMasterProductModalIsOpen: false })
+    useAppStore.setState({ createCategoryModalIsOpen: false })
 
-  const createMasterProduct = async () => {
-    // TODO: Show success/error Toast
-
+  const createCategory = async () => {
     await createMutation.mutateAsync({ name })
     onClose()
   }
@@ -40,7 +38,7 @@ export function CreateMasterProductModal() {
   return (
     <Modal open={open} onClose={onClose}>
       <ModalDialog>
-        <DialogTitle sx={{ mb: 1 }}>Create master product</DialogTitle>
+        <DialogTitle sx={{ mb: 1 }}>Create category</DialogTitle>
 
         <Stack spacing={2}>
           <FormControl>
@@ -48,11 +46,12 @@ export function CreateMasterProductModal() {
             <Input
               autoFocus
               value={name}
+              placeholder="Enter a name..."
               onChange={event => setName(event.target.value)}
             />
           </FormControl>
 
-          <ButtonsContainer>
+          <ButtonsContainer sx={{ mt: 3 }}>
             <Button
               disabled={creating}
               type="reset"
@@ -68,7 +67,7 @@ export function CreateMasterProductModal() {
               variant="soft"
               loading={creating}
               disabled={!name || creating}
-              onClick={createMasterProduct}
+              onClick={createCategory}
             >
               Create
             </Button>

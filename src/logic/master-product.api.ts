@@ -1,5 +1,9 @@
-import { MasterProduct } from './types'
-import { mockedMasterProducts } from './mock'
+import {
+  MasterProduct,
+  CreateMasterProductDTO,
+  UpdateMasterProductDTO,
+} from './types'
+import { mockedCategories, mockedMasterProducts } from './mock'
 import { axiosClient, MOCK_RESPONSES, waitForMockedDelay } from './api'
 
 export const MASTER_PRODUCT_BUCKET_SIZE = 20
@@ -7,10 +11,12 @@ export const MASTER_PRODUCT_BUCKET_SIZE = 20
 export async function searchMasterProductsRequest({
   search,
   similarTo,
+  categoryId,
   skip = 0,
 }: {
   skip?: number
   similarTo?: number
+  categoryId?: number
   search?: string
 }) {
   if (MOCK_RESPONSES) {
@@ -28,22 +34,40 @@ export async function searchMasterProductsRequest({
   }
 
   const res = await axiosClient.get('/master', {
-    params: { search, similarTo, take: MASTER_PRODUCT_BUCKET_SIZE, skip },
+    params: {
+      search,
+      similarTo,
+      categoryId,
+      take: MASTER_PRODUCT_BUCKET_SIZE,
+      skip,
+    },
   })
 
   return res.data as MasterProduct[]
 }
 
-export async function createMasterProductRequest({ name }: { name: string }) {
+export async function createMasterProductRequest({
+  name,
+  categoryId,
+}: CreateMasterProductDTO) {
   if (MOCK_RESPONSES) {
     await waitForMockedDelay()
-    const createdMock = { id: Date.now(), name } as MasterProduct
+
+    const categoryName = mockedCategories.find(({ id }) => id === categoryId)
+      ?.name
+
+    const createdMock = {
+      id: Date.now(),
+      name,
+      categoryName,
+      categoryId,
+    } as MasterProduct
 
     mockedMasterProducts.push(createdMock)
     return createdMock
   }
 
-  const res = await axiosClient.post('/master', { name })
+  const res = await axiosClient.post('/master', { name, categoryId })
   return res.data as MasterProduct
 }
 
@@ -66,16 +90,22 @@ export async function deleteMasterProductRequest({ id }: { id: number }) {
 export async function updateMasterProductNameRequest({
   id,
   name,
-}: {
-  id: number
-  name: string
-}) {
+  categoryId,
+}: UpdateMasterProductDTO) {
   if (MOCK_RESPONSES) {
     await waitForMockedDelay()
     const found = mockedMasterProducts.find(p => p.id === id)
-    return { ...found, id, name } as MasterProduct
+    const newCategory = mockedCategories.find(c => c.id === categoryId)
+
+    return {
+      ...found,
+      id,
+      name,
+      categoryName: newCategory?.name,
+      category: { id: categoryId, name: newCategory?.name },
+    } as MasterProduct
   }
 
-  const res = await axiosClient.put(`/master/${id}`, { name })
+  const res = await axiosClient.put(`/master/${id}`, { name, categoryId })
   return res.data as MasterProduct
 }

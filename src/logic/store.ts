@@ -1,12 +1,17 @@
 import { create } from 'zustand'
-import { ToastProps } from '../components/toast/api'
+import { ToastProps } from '../components/toast'
+import { MasterProductModalProps } from '../components/modals'
 
 export interface AppState {
-  createMasterProductModalIsOpen: boolean
+  createCategoryModalIsOpen: boolean
+  masterProductModalProps: MasterProductModalProps | undefined
+
   toastsQueue: ToastProps[]
 }
 
 export const useAppStore = create<AppState>()(() => ({
-  createMasterProductModalIsOpen: false,
+  createCategoryModalIsOpen: false,
+  masterProductModalProps: undefined,
+
   toastsQueue: [],
 }))

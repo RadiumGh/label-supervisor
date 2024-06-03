@@ -51,7 +51,7 @@ export function ProductList({ filter }: Props) {
       <Input
         placeholder="Enter a number (Default: 0)"
         value={startId}
-        sx={{ mb: 1 }}
+        sx={{ mb: 1, py: 1 }}
         onChange={e => {
           const value = e.target.value
           setStartId(value ? value.replace(/[^0-9]/i, '') : '')

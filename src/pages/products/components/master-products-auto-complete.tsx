@@ -27,7 +27,7 @@ export interface MasterProductsAutoCompleteAPI {
 }
 
 interface IMasterProductOption extends MasterProduct {
-  inputValue?: string
+  shouldCreate?: boolean
   isLoading?: boolean
 }
 
@@ -97,17 +97,10 @@ export const MasterProductsAutoComplete = forwardRef(function (
         setInputIsChanging(true)
       }}
       options={isLoading ? [] : items}
-      // eslint-disable-next-line
-      // @ts-ignore
-      getOptionLabel={(option: IMasterProductOption) => {
-        if (option.id === -1) return option.name
-        if (option.inputValue) return option.inputValue as string
-        if (option.categoryName)
-          return `[${option.categoryName}] ${option.name}`
-
-        return option.name
-      }}
-      isOptionEqualToValue={(option, value) => option.id === value.id}
+      getOptionLabel={option =>
+        typeof option === 'string' ? option : option.name
+      }
+      isOptionEqualToValue={(option, value) => option?.id === value?.id}
       filterOptions={(options: IMasterProductOption[], params) => {
         if (isLoading) return []
 
@@ -117,8 +110,8 @@ export const MasterProductsAutoComplete = forwardRef(function (
         if (inputValue !== '' && !isExisting) {
           options.push({
             id: -1,
-            inputValue,
-            name: `Add "${inputValue}"`,
+            name: inputValue,
+            shouldCreate: true,
           })
         }
 
@@ -131,19 +124,15 @@ export const MasterProductsAutoComplete = forwardRef(function (
 
         return options
       }}
-      onChange={(_, option) => {
-        if (!option) onValueChange(undefined)
-        else if (typeof option === 'string' || 'inputValue' in option) {
-          const name =
-            typeof option === 'string'
-              ? option
-              : 'inputValue' in option
-                ? (option.inputValue as string)
-                : ''
-
-          onValueChange({ id: -1, name })
-        } else onValueChange(option)
-      }}
+      onChange={(_, option) =>
+        onValueChange(
+          !option
+            ? undefined
+            : typeof option === 'string'
+              ? { id: -1, name: option }
+              : option,
+        )
+      }
       renderOption={(props, option: IMasterProductOption) => {
         if (option.isLoading)
           return (
@@ -160,7 +149,7 @@ export const MasterProductsAutoComplete = forwardRef(function (
 
         return (
           <AutocompleteOption {...props}>
-            {option.name?.startsWith('Add "') && (
+            {option.shouldCreate && (
               <ListItemDecorator>
                 <AddRounded />
               </ListItemDecorator>
@@ -173,7 +162,9 @@ export const MasterProductsAutoComplete = forwardRef(function (
                 </Typography>
               )}
 
-              <Typography sx={{ fontWeight: 200 }}>{option.name}</Typography>
+              <Typography sx={{ fontWeight: 200 }}>
+                {option.shouldCreate ? `Add "${option.name}"` : option.name}
+              </Typography>
             </Typography>
           </AutocompleteOption>
         )

@@ -2,7 +2,9 @@ import { useCallback, useState } from 'react'
 import { AddRounded, SearchRounded } from '@mui/icons-material'
 import { IconButton, Input, styled, Tooltip, Typography } from '@mui/joy'
 import { MasterProductList } from './components/master-product-list'
-import { useAppStore, useDebounce } from '../../logic'
+import { Category, useAppStore, useDebounce } from '../../logic'
+import { DescriptionTypography } from '../../components/description-typography.tsx'
+import { CategorySelect } from '../../components/category-select.tsx'
 
 const Container = styled('div')`
   display: flex;
@@ -19,12 +21,29 @@ const HeaderContainer = styled('div')`
   margin-bottom: 12px;
 `
 
+const FiltersContainer = styled('div')`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+  gap: 8px;
+
+  @media (min-width: 700px) {
+    & > div {
+      flex-basis: 50%;
+    }
+
+    flex-direction: row;
+    margin-bottom: 10px;
+  }
+`
+
 export function MasterProducts() {
+  const [category, setCategory] = useState<Category | undefined>()
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedQuery = useDebounce(searchQuery)
 
   const openCreateMasterProductModal = useCallback(() => {
-    useAppStore.setState({ createMasterProductModalIsOpen: true })
+    useAppStore.setState({ masterProductModalProps: {} })
   }, [])
 
   return (
@@ -46,16 +65,23 @@ export function MasterProducts() {
         </Tooltip>
       </HeaderContainer>
 
-      <Input
-        value={searchQuery}
-        onChange={e => setSearchQuery(e.target.value)}
-        sx={{ py: 1.5, flexShrink: 0 }}
-        placeholder="Search..."
-        aria-placeholder="Search"
-        endDecorator={<SearchRounded />}
-      />
+      <DescriptionTypography>Filters</DescriptionTypography>
+      <FiltersContainer>
+        <Input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search by name"
+          aria-placeholder="Search"
+          endDecorator={<SearchRounded />}
+        />
 
-      <MasterProductList searchQuery={debouncedQuery} />
+        <CategorySelect value={category} onValueChange={setCategory} />
+      </FiltersContainer>
+
+      <MasterProductList
+        searchQuery={debouncedQuery}
+        categoryId={category?.id ?? undefined}
+      />
     </Container>
   )
 }

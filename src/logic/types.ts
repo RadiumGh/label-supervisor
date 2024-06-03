@@ -1,16 +1,33 @@
-export interface UpdateMasterProductDTO {
+export interface UpdateCategoryDTO {
   id: number
   name: string
 }
 
+export interface CreateCategoryDTO {
+  name: string
+}
+
+export interface Category {
+  id: number
+  name: string
+}
+
+export interface UpdateMasterProductDTO {
+  id: number
+  name: string
+  categoryId: number
+}
+
 export interface CreateMasterProductDTO {
   name: string
+  categoryId: number
 }
 
 export interface MasterProduct {
   id: number
   name: string
   categoryName?: string
+  category?: Category
 }
 
 export interface UpdateProductMasterProductDTO {
