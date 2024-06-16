@@ -1,12 +1,13 @@
+import { useEffect } from 'react'
 import { Button, styled, ToggleButtonGroup } from '@mui/joy'
 import { ProductStatusType } from '../../../logic'
-import { useEffect } from 'react'
-import { queryClient } from '../../../main.tsx'
+import { queryClient } from '../../../main'
 
 const Buttons = styled(ToggleButtonGroup)`
-  margin: 8px 0 20px 0;
   & > button {
     width: 50%;
+    min-height: 42px;
+    font-size: 14px;
   }
 `
 

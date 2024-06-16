@@ -1,82 +1,51 @@
-import { useMemo, useState } from 'react'
-import { Input, styled } from '@mui/joy'
+import { styled } from '@mui/joy'
 import { Waypoint } from 'react-waypoint'
 import { ProductCard } from './product-card'
 import { Loading } from '../../../components/loading'
+import { NoResult } from '../../../components/no-result'
 import { LoadingNextPage } from '../../../components/loading-next-page'
-import { ProductStatusType, useSearchProducts } from '../../../logic'
-import { DescriptionTypography } from '../../../components/description-typography.tsx'
-import { NoResult } from '../../../components/no-result.tsx'
-
-const Container = styled('div')`
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-`
+import { Product } from '../../../logic'
 
 const ListContainer = styled('div')`
   display: flex;
   flex-direction: column;
-  margin-top: 8px;
   gap: 8px;
 
   overflow: hidden auto;
 `
 
 interface Props {
-  filter: ProductStatusType
+  isLoading: boolean
+  products: Product[]
+  canLoadMore: boolean
+  loadMore: () => void
 }
 
-export function ProductList({ filter }: Props) {
-  const [startId, setStartId] = useState<string>('')
-
-  const {
-    data: productPages,
-    isFetching,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-  } = useSearchProducts(filter, Number(startId))
-
-  const isLoading = isFetching && !isFetchingNextPage
-
-  const pagesToRender = useMemo(() => {
-    if (!productPages?.pages?.length) return []
-    return productPages.pages
-  }, [productPages])
-
+export function ProductList({
+  products,
+  isLoading,
+  canLoadMore,
+  loadMore,
+}: Props) {
   return (
-    <Container>
-      <DescriptionTypography sx={{ mb: 0.5 }}>Start Id</DescriptionTypography>
-      <Input
-        placeholder="Enter a number (Default: 0)"
-        value={startId}
-        sx={{ mb: 1, py: 1 }}
-        onChange={e => {
-          const value = e.target.value
-          setStartId(value ? value.replace(/[^0-9]/i, '') : '')
-        }}
-      />
-
+    <>
       {isLoading ? (
         <Loading />
-      ) : !productPages?.pages[0].length ? (
+      ) : !products.length ? (
         <NoResult />
       ) : (
         <ListContainer>
-          {pagesToRender.map(page =>
-            page.map(product => (
-              <ProductCard key={product.id} product={product} />
-            )),
-          )}
+          {products.map(product => (
+            <ProductCard key={product.id} product={product} />
+          ))}
 
-          {hasNextPage && (
-            <Waypoint onEnter={() => fetchNextPage()}>
+          {canLoadMore && (
+            <Waypoint onEnter={loadMore}>
               <LoadingNextPage text="Loading More Products" />
             </Waypoint>
           )}
         </ListContainer>
       )}
-    </Container>
+    </>
   )
 }

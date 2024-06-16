@@ -1,4 +1,9 @@
-import { Product, ProductStatusType } from './types'
+import {
+  Product,
+  ProductStatusType,
+  ProgressResponse,
+  SearchProductsResponse,
+} from './types'
 import { axiosClient, MOCK_RESPONSES, waitForMockedDelay } from './api'
 import { generatedProducts, mockedMasterProducts, mockedProducts } from './mock'
 
@@ -15,10 +20,11 @@ export async function searchProductsRequest({
 }) {
   if (MOCK_RESPONSES) {
     await waitForMockedDelay()
-    return generatedProducts.slice(skip, skip + PRODUCT_BUCKET_SIZE)
+    const products = generatedProducts.slice(skip, skip + PRODUCT_BUCKET_SIZE)
+    return { products, remaining: 250 } as SearchProductsResponse
   }
 
-  const res = await axiosClient.get('/product', {
+  const res = await axiosClient.get('/product/v2', {
     params: {
       filter,
       take: PRODUCT_BUCKET_SIZE,
@@ -27,7 +33,7 @@ export async function searchProductsRequest({
     },
   })
 
-  return res.data as Product[]
+  return res.data as SearchProductsResponse
 }
 
 export async function updateProductMasterProductRequest({
@@ -53,4 +59,14 @@ export async function updateProductMasterProductRequest({
   })
 
   return res.data as Product
+}
+
+export async function getProgressRequest(): Promise<ProgressResponse> {
+  if (MOCK_RESPONSES) {
+    await waitForMockedDelay()
+    return { completed: 300, total: 700 }
+  }
+
+  const res = await axiosClient.get('/progress')
+  return res.data
 }

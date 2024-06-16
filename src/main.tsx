@@ -1,10 +1,10 @@
 import ReactDOM from 'react-dom/client'
+import { CssVarsProvider } from '@mui/joy'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { showToast } from './components/toast'
 import { App } from './pages/app.tsx'
 import { theme } from './theme'
 import './index.css'
-import { CssVarsProvider } from '@mui/joy'
 
 export const queryClient = new QueryClient({
   defaultOptions: {

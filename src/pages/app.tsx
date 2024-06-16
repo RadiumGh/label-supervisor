@@ -90,14 +90,16 @@ export function App() {
     (newValue: string) => {
       // TODO: Can we do it with refetchOnMount?
       const tabs = ['products', 'master-products', 'categories']
+      if (newValue !== 'products')
+        queryClient.resetQueries({ queryKey: ['progress'] })
 
       tabs
         .filter(tab => tab !== newValue)
-        .forEach(tab =>
+        .forEach(tab => {
           queryClient.resetQueries({
             queryKey: [tab],
-          }),
-        )
+          })
+        })
     },
     [queryClient],
   )
