@@ -106,8 +106,8 @@ export const MasterProductsAutoComplete = forwardRef(function (
 
         const { inputValue } = params
 
-        const isExisting = options.some(option => inputValue === option.name)
-        if (inputValue !== '' && !isExisting) {
+        const alreadyExists = options.some(option => inputValue === option.name)
+        if (inputValue !== '' && !alreadyExists) {
           options.push({
             id: -1,
             name: inputValue,

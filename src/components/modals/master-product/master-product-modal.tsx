@@ -14,6 +14,7 @@ import { DescriptionTypography } from '../../description-typography'
 import {
   Category,
   useAppStore,
+  useCreateCategory,
   useCreateMasterProduct,
   useUpdateMasterProduct,
 } from '../../../logic'
@@ -34,7 +35,12 @@ export function MasterProductModal() {
   const createMutation = useCreateMasterProduct()
   const updateMutation = useUpdateMasterProduct()
 
-  const mutating = createMutation.isPending || updateMutation.isPending
+  const createCategoryMutation = useCreateCategory()
+
+  const mutating =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    createCategoryMutation.isPending
 
   const props = useAppStore(state => state.masterProductModalProps)
   const { id, name, category, onDone, onCancel } = props || {}
@@ -43,6 +49,20 @@ export function MasterProductModal() {
     setEditedNameValue(name ?? '')
     setSelectedCategory(category)
   }, [name, category])
+
+  const selectCategory = async (category: Category | undefined) => {
+    if (!category || category.id !== -1) {
+      setSelectedCategory(category)
+      return
+    }
+
+    // Create Category, Then Select it
+    const createdCategory = await createCategoryMutation.mutateAsync({
+      name: category.name,
+    })
+
+    if (createdCategory?.id != undefined) setSelectedCategory(createdCategory)
+  }
 
   const onClose = (canceled = true) => {
     if (canceled) onCancel?.()
@@ -100,7 +120,7 @@ export function MasterProductModal() {
             <DescriptionTypography>Category</DescriptionTypography>
             <CategorySelect
               value={selectedCategory}
-              onValueChange={setSelectedCategory}
+              onValueChange={selectCategory}
             />
           </FormControl>
 

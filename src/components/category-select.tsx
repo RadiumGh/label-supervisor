@@ -5,12 +5,14 @@ import {
   useRef,
   useState,
 } from 'react'
+import { AddRounded } from '@mui/icons-material'
 import {
   Autocomplete,
   AutocompleteOption,
   CircularProgress,
   ListItemDecorator,
   Typography,
+  createFilterOptions,
 } from '@mui/joy'
 import { Category, useCategories } from '../logic'
 
@@ -20,8 +22,9 @@ export interface CategorySelectAPI {
 
 interface ICategoryOption extends Category {
   shouldCreate?: boolean
-  isLoading?: boolean
 }
+
+const filterOptions = createFilterOptions<ICategoryOption>()
 
 interface Props {
   value?: Category
@@ -67,10 +70,35 @@ export const CategorySelect = forwardRef(function (
       getOptionLabel={(option: Category) => option.name}
       isOptionEqualToValue={(option, value) => option?.id === value?.id}
       onChange={(_, option) => onValueChange(option ?? undefined)}
+      filterOptions={(options: ICategoryOption[], params) => {
+        if (isFetching) return []
+
+        const filteredOptions = filterOptions(options, params)
+        const { inputValue } = params
+
+        const alreadyExists = options.some(option => inputValue === option.name)
+        if (inputValue !== '' && !alreadyExists) {
+          filteredOptions.push({
+            id: -1,
+            name: inputValue,
+            shouldCreate: true,
+          })
+        }
+
+        return filteredOptions
+      }}
       renderOption={(props, option: ICategoryOption) => {
         return (
           <AutocompleteOption {...props}>
-            <Typography textAlign="start">{option.name}</Typography>
+            {option.shouldCreate && (
+              <ListItemDecorator>
+                <AddRounded />
+              </ListItemDecorator>
+            )}
+
+            <Typography textAlign="start">
+              {option.shouldCreate ? `Add "${option.name}"` : option.name}
+            </Typography>
           </AutocompleteOption>
         )
       }}
