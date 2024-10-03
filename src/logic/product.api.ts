@@ -28,7 +28,7 @@ export async function searchProductsRequest({
     params: {
       filter,
       take: PRODUCT_BUCKET_SIZE,
-      skip: startId ? 0 : skip,
+      skip: startId ? Math.max(0, skip - startId) : skip,
       startId,
     },
   })

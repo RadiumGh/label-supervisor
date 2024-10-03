@@ -26,6 +26,8 @@ export function useSearchProducts(
     queryKey: ['products', filter, startId],
     queryFn: async ({ pageParam }) => {
       const skip = startId + ((pageParam as number) ?? 0) * PRODUCT_BUCKET_SIZE
+
+      console.log('queryFn:', { pageParam, skip, startId })
       return searchProductsRequest({ filter, startId: startId, skip })
     },
 
