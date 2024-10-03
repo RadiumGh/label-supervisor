@@ -58,7 +58,10 @@ export const MasterProductsAutoComplete = forwardRef(function (
     })
 
   const items = useMemo(
-    () => data?.pages.reduce((acc, page) => acc.concat(page), []) || [],
+    () =>
+      (data?.pages.reduce((acc, page) => acc.concat(page), []) || []).filter(
+        ({ categoryName }) => categoryName !== 'Uncategorizables',
+      ),
     [data],
   )
 
