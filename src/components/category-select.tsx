@@ -29,9 +29,11 @@ const filterOptions = createFilterOptions<ICategoryOption>()
 interface Props {
   value?: Category
   onValueChange: (value?: Category) => void
+  placeholder?: string
+  sx?: Record<string, unknown>
 }
 export const CategorySelect = forwardRef(function (
-  { value, onValueChange }: Props,
+  { value, onValueChange, placeholder, sx }: Props,
   ref,
 ) {
   const inputRef = useRef<HTMLInputElement>()
@@ -102,12 +104,12 @@ export const CategorySelect = forwardRef(function (
           </AutocompleteOption>
         )
       }}
-      placeholder="Select Category"
+      placeholder={placeholder ?? 'Select Category'}
       selectOnFocus
       clearOnBlur
       handleHomeEndKeys
       autoComplete
-      sx={{ flexGrow: 1, py: 1 }}
+      sx={{ flexGrow: 1, py: 1, ...sx }}
     />
   )
 })

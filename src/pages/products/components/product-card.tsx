@@ -14,21 +14,25 @@ import {
   MasterProductsAutoCompleteAPI,
 } from './master-products-auto-complete'
 import {
+  Category,
   MasterProduct,
   Product,
   useCreateMasterProduct,
   useUpdateProductMasterProduct,
 } from '../../../logic'
 import { showMasterProductModal } from '../../../components/modals'
+import { CategorySelect } from '../../../components/category-select.tsx'
 
 const isTouchDevice = 'ontouchstart' in window
 
 const SelectMasterProductContainer = styled('div')`
-  display: flex;
   gap: 8px;
+  width: 100%;
+  min-height: 36px;
+
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 36px;
 `
 
 const NameAndCategoryTypography = styled(Typography)`
@@ -63,6 +67,9 @@ const EditFieldDecoratorContainer = styled('div')`
   display: flex;
   justify-content: center;
   align-items: center;
+
+  align-self: flex-end;
+  margin-bottom: 4px;
 `
 
 interface Props {
@@ -74,6 +81,10 @@ export function ProductCard({ product }: Props) {
 
   const autoCompleteRef = useRef<MasterProductsAutoCompleteAPI>()
   const [showEditField, setShowEditField] = useState(false)
+
+  const [categoryOfMasterProduct, setCategoryOfMasterProduct] = useState<
+    Category | undefined
+  >()
 
   const [selectedMasterProduct, setSelectedMasterProduct] = useState<
     MasterProduct | undefined
@@ -172,12 +183,22 @@ export function ProductCard({ product }: Props) {
 
       <SelectMasterProductContainer>
         {showEditField ? (
-          <MasterProductsAutoComplete
-            ref={autoCompleteRef}
-            productId={id}
-            value={selectedMasterProduct}
-            onValueChange={onMasterProductChange}
-          />
+          <div style={{ flexGrow: 1, width: 'calc(100% - 40px)' }}>
+            <CategorySelect
+              value={categoryOfMasterProduct}
+              onValueChange={setCategoryOfMasterProduct}
+              placeholder="Filter By Category"
+              sx={{ py: 0, mb: 1 }}
+            />
+
+            <MasterProductsAutoComplete
+              ref={autoCompleteRef}
+              productId={id}
+              categoryId={categoryOfMasterProduct?.id ?? undefined}
+              value={selectedMasterProduct}
+              onValueChange={onMasterProductChange}
+            />
+          </div>
         ) : (
           <Typography
             level={masterProduct?.id ? 'body-md' : 'body-sm'}

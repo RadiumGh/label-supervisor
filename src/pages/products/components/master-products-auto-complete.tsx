@@ -22,8 +22,6 @@ import {
   useSearchMasterProducts,
 } from '../../../logic'
 
-const UNCATEGORIZABLE_CATEGORY = 'Uncategorizables'
-
 export interface MasterProductsAutoCompleteAPI {
   focus: () => void
 }
@@ -36,11 +34,12 @@ interface IMasterProductOption extends MasterProduct {
 interface Props {
   value?: MasterProduct
   productId: number
+  categoryId?: number
   onValueChange: (masterProduct?: MasterProduct) => void
   onClose?: () => void
 }
 export const MasterProductsAutoComplete = forwardRef(function (
-  { value, productId, onValueChange, onClose }: Props,
+  { value, productId, categoryId, onValueChange, onClose }: Props,
   ref,
 ) {
   const inputRef = useRef<HTMLInputElement>()
@@ -58,13 +57,11 @@ export const MasterProductsAutoComplete = forwardRef(function (
     useSearchMasterProducts({
       search: debouncedQuery,
       similarTo: productId,
+      categoryId,
     })
 
   const items = useMemo(
-    () =>
-      (data?.pages.reduce((acc, page) => acc.concat(page), []) || []).filter(
-        ({ categoryName }) => categoryName !== UNCATEGORIZABLE_CATEGORY,
-      ),
+    () => data?.pages.reduce((acc, page) => acc.concat(page), []) || [],
     [data],
   )
 
