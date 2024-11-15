@@ -2,6 +2,7 @@ import { Waypoint } from 'react-waypoint'
 import {
   forwardRef,
   RefObject,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -21,6 +22,8 @@ import {
   useDebounce,
   useSearchMasterProducts,
 } from '../../../logic'
+
+const UNCATEGORIZABLE_CATEGORY = 'Uncategorizables'
 
 export interface MasterProductsAutoCompleteAPI {
   focus: () => void
@@ -60,10 +63,30 @@ export const MasterProductsAutoComplete = forwardRef(function (
   const items = useMemo(
     () =>
       (data?.pages.reduce((acc, page) => acc.concat(page), []) || []).filter(
-        ({ categoryName }) => categoryName !== 'Uncategorizables',
+        ({ categoryName }) => categoryName !== UNCATEGORIZABLE_CATEGORY,
       ),
     [data],
   )
+
+  const hasNextPageRef = useRef<boolean>(hasNextPage)
+  const shouldStopFetchingNextPagesRef = useRef<boolean>(false)
+
+  useEffect(() => {
+    hasNextPageRef.current = hasNextPage
+  }, [hasNextPage])
+
+  const fetchNextPagesUntilFull = useCallback(() => {
+    fetchNextPage().then(() =>
+      setTimeout(() => {
+        if (shouldStopFetchingNextPagesRef.current) {
+          shouldStopFetchingNextPagesRef.current = false
+          return
+        }
+
+        if (hasNextPageRef.current) return fetchNextPagesUntilFull()
+      }, 1000),
+    )
+  }, [fetchNextPage])
 
   useImperativeHandle(
     ref,
@@ -137,7 +160,13 @@ export const MasterProductsAutoComplete = forwardRef(function (
       renderOption={(props, option: IMasterProductOption) => {
         if (option.isLoading)
           return (
-            <Waypoint onEnter={() => fetchNextPage()} {...props}>
+            <Waypoint
+              onEnter={() => fetchNextPagesUntilFull()}
+              onLeave={() => {
+                shouldStopFetchingNextPagesRef.current = true
+              }}
+              {...props}
+            >
               <AutocompleteOption {...props}>
                 <ListItemDecorator>
                   <CircularProgress size="sm" color="neutral" />
