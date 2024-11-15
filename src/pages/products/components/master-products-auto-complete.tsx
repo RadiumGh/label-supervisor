@@ -2,7 +2,6 @@ import { Waypoint } from 'react-waypoint'
 import {
   forwardRef,
   RefObject,
-  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -38,9 +37,10 @@ interface Props {
   value?: MasterProduct
   productId: number
   onValueChange: (masterProduct?: MasterProduct) => void
+  onClose?: () => void
 }
 export const MasterProductsAutoComplete = forwardRef(function (
-  { value, productId, onValueChange }: Props,
+  { value, productId, onValueChange, onClose }: Props,
   ref,
 ) {
   const inputRef = useRef<HTMLInputElement>()
@@ -68,26 +68,6 @@ export const MasterProductsAutoComplete = forwardRef(function (
     [data],
   )
 
-  const hasNextPageRef = useRef<boolean>(hasNextPage)
-  const shouldStopFetchingNextPagesRef = useRef<boolean>(false)
-
-  useEffect(() => {
-    hasNextPageRef.current = hasNextPage
-  }, [hasNextPage])
-
-  const fetchNextPagesUntilFull = useCallback(() => {
-    fetchNextPage().then(() =>
-      setTimeout(() => {
-        if (shouldStopFetchingNextPagesRef.current) {
-          shouldStopFetchingNextPagesRef.current = false
-          return
-        }
-
-        if (hasNextPageRef.current) return fetchNextPagesUntilFull()
-      }, 1000),
-    )
-  }, [fetchNextPage])
-
   useImperativeHandle(
     ref,
     () => ({
@@ -108,7 +88,10 @@ export const MasterProductsAutoComplete = forwardRef(function (
       value={value}
       loading={isLoading}
       onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
+      onClose={() => {
+        setOpen(false)
+        onClose?.()
+      }}
       loadingText={
         <AutocompleteOption sx={{ pointerEvents: 'none' }}>
           <ListItemDecorator>
@@ -160,13 +143,7 @@ export const MasterProductsAutoComplete = forwardRef(function (
       renderOption={(props, option: IMasterProductOption) => {
         if (option.isLoading)
           return (
-            <Waypoint
-              onEnter={() => fetchNextPagesUntilFull()}
-              onLeave={() => {
-                shouldStopFetchingNextPagesRef.current = true
-              }}
-              {...props}
-            >
+            <Waypoint onEnter={() => fetchNextPage()} {...props}>
               <AutocompleteOption {...props}>
                 <ListItemDecorator>
                   <CircularProgress size="sm" color="neutral" />
