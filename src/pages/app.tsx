@@ -4,6 +4,7 @@ import { Tabs, Tab, TabList, TabPanel, styled, tabClasses } from '@mui/joy'
 import { Toast } from '../components/toast'
 import { CreateCategoryModal, MasterProductModal } from '../components/modals'
 import { Products } from './products'
+import { WHProducts } from './wh-products'
 import { MasterProducts } from './master-products'
 import { Categories } from './categories'
 import { useIsDesktopSize } from '../components/media-query-hooks'
@@ -89,7 +90,7 @@ export function App() {
   const onTabChange = useCallback(
     (newValue: string) => {
       // TODO: Can we do it with refetchOnMount?
-      const tabs = ['products', 'master-products', 'categories']
+      const tabs = ['products', 'master-products', 'categories', 'waithero']
       if (newValue !== 'products')
         queryClient.resetQueries({ queryKey: ['progress'] })
 
@@ -141,6 +142,10 @@ export function App() {
           <Tab value="categories" disableIndicator>
             Categories
           </Tab>
+
+          <Tab value="waithero" disableIndicator>
+            WaitHero
+          </Tab>
         </StyledTabList>
 
         <StyledTabPanel value="products">
@@ -158,6 +163,12 @@ export function App() {
         <StyledTabPanel value="categories">
           <Page>
             <Categories />
+          </Page>
+        </StyledTabPanel>
+
+        <StyledTabPanel value="waithero">
+          <Page>
+            <WHProducts />
           </Page>
         </StyledTabPanel>
       </StyledTabs>

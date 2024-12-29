@@ -12,7 +12,7 @@ export const waitForMockedDelay = async () => {
   await asyncDelay(waitTime)
 }
 
-export const MOCK_RESPONSES = false
+export const MOCK_RESPONSES = true
 const SERVER_BASE_URL = 'http://157.90.154.82:10300'
 
 export const axiosClient = axios.create({
