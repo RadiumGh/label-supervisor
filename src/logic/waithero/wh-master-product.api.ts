@@ -1,18 +1,15 @@
-import { WHMasterProduct } from './wh.types'
-import { mockedMasterProducts } from './wh.mock.ts'
-import { axiosClient, MOCK_RESPONSES, waitForMockedDelay } from '../api'
+import { mockedMasterProducts } from './wh.mock'
+import { SearchWHMasterProductsUntransformedResponse } from './wh.types'
+import { MOCK_RESPONSES, waitForMockedDelay, WHAxiosClient } from '../api'
+import { transformWHSearchMasterProductsResponse } from './data-transformers'
 
 export const WH_MASTER_PRODUCT_BUCKET_SIZE = 20
 
 export async function searchWHMasterProductsRequest({
   search,
-  similarTo,
-  categoryId,
   skip = 0,
 }: {
   skip?: number
-  similarTo?: number
-  categoryId?: number
   search?: string
 }) {
   if (MOCK_RESPONSES) {
@@ -29,15 +26,19 @@ export async function searchWHMasterProductsRequest({
         )
   }
 
-  const res = await axiosClient.get('/master', {
-    params: {
-      search,
-      similarTo,
-      categoryId,
-      take: WH_MASTER_PRODUCT_BUCKET_SIZE,
-      skip,
+  const res = await WHAxiosClient.post(
+    '/product/all/lite',
+    {
+      name: search || null,
+      pagination: {
+        elementsPerPage: WH_MASTER_PRODUCT_BUCKET_SIZE,
+        page: Math.floor(skip / WH_MASTER_PRODUCT_BUCKET_SIZE) + 1,
+      },
     },
-  })
+    { baseURL: 'https://server.waithero.com/v1-be/api' },
+  )
 
-  return res.data as WHMasterProduct[]
+  return transformWHSearchMasterProductsResponse(
+    res.data as SearchWHMasterProductsUntransformedResponse,
+  )
 }

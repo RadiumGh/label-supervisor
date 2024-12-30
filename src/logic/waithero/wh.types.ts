@@ -31,3 +31,26 @@ export interface SearchWHProductsResponse {
   products: WHProduct[]
   remaining: number
 }
+
+export interface WHUnTransformedMasterProduct {
+  id: number
+  name: string
+  category: WHCategory
+}
+
+export interface WHUnTransformedProduct {
+  id: number
+  name: string
+  categoryRestaurant: WHCategory
+  product: Omit<WHUnTransformedMasterProduct, 'category'>
+}
+
+export interface SearchWHProductsUntransformedResponse {
+  totalElements: number
+  list: WHUnTransformedProduct[]
+}
+
+export interface SearchWHMasterProductsUntransformedResponse {
+  totalElements: number
+  list: WHUnTransformedMasterProduct[]
+}

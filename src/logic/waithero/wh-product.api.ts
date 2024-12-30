@@ -1,21 +1,26 @@
 import {
+  SearchWHProductsResponse,
+  SearchWHProductsUntransformedResponse,
   WHProduct,
   WHProductStatusType,
-  SearchWHProductsResponse,
-} from './wh.types.ts'
+  WHUnTransformedProduct,
+} from './wh.types'
 import {
-  mockedProducts,
   generatedProducts,
   mockedMasterProducts,
-} from './wh.mock.ts'
-import { axiosClient, MOCK_RESPONSES, waitForMockedDelay } from '../api'
+  mockedProducts,
+} from './wh.mock'
+import { MOCK_RESPONSES, waitForMockedDelay, WHAxiosClient } from '../api'
+import {
+  transformWHProduct,
+  transformWHSearchProductsResponse,
+} from './data-transformers'
 
 export const WH_PRODUCT_BUCKET_SIZE = 20
 
 export async function searchWHProductsRequest({
   filter,
   skip = 0,
-  startId = 0,
 }: {
   filter: WHProductStatusType
   skip?: number
@@ -30,16 +35,17 @@ export async function searchWHProductsRequest({
     return { products, remaining: 250 } as SearchWHProductsResponse
   }
 
-  const res = await axiosClient.get('/product/v2', {
-    params: {
-      filter,
-      take: WH_PRODUCT_BUCKET_SIZE,
-      skip: startId ? Math.max(0, skip - startId) : skip,
-      startId,
+  const res = await WHAxiosClient.post('/product-restaurant/search', {
+    hasMasterProduct: filter === WHProductStatusType.COMPLETED,
+    pagination: {
+      elementsPerPage: WH_PRODUCT_BUCKET_SIZE,
+      page: Math.floor(skip / WH_PRODUCT_BUCKET_SIZE) + 1,
     },
   })
 
-  return res.data as SearchWHProductsResponse
+  return transformWHSearchProductsResponse(
+    res.data as SearchWHProductsUntransformedResponse,
+  )
 }
 
 export async function updateWHProductMasterProductRequest({
@@ -60,9 +66,19 @@ export async function updateWHProductMasterProductRequest({
     return { ...product, masterProduct } as WHProduct
   }
 
-  const res = await axiosClient.put(`/product/${id}/master`, {
-    masterProductId,
-  })
+  const res = await WHAxiosClient.put(
+    `/product-restaurant/master`,
+    {
+      id,
+      idProduct: masterProductId,
+    },
+    {
+      headers: {
+        Authorization:
+          'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlsLm1tZGdoYW5iYXJpQGdtYWlsLmNvbSIsImV4cCI6MTc2NzExNDg3MiwiaWF0IjoxNzM1NTc4ODcyfQ.iyEWnWKleB2KsEJOk8Lu-f30n7289LffuMX7wRxRfJ7cZds4j7EmZ8LVJl3_WyfkySAmxaDVi0NsRbjT4mcKsQ',
+      },
+    },
+  )
 
-  return res.data as WHProduct
+  return transformWHProduct(res.data as WHUnTransformedProduct)
 }

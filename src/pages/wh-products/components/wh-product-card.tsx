@@ -14,10 +14,13 @@ import {
   WHMasterProductsAutoComplete,
 } from './wh-master-products-auto-complete.tsx'
 import {
+  SearchWHProductsResponse,
   useUpdateWHProductMasterProduct,
   WHMasterProduct,
   WHProduct,
 } from '../../../logic/waithero'
+import { showToast } from '../../../components/toast'
+import { queryClient } from '../../../main.tsx'
 
 const isTouchDevice = 'ontouchstart' in window
 
@@ -91,10 +94,38 @@ export function WHProductCard({ product }: Props) {
   const submitChangesToMasterProduct = async (value: WHMasterProduct) => {
     if (!value?.id) return
 
-    await updateMasterProductMutation.mutateAsync({
-      productId: id,
-      masterProductId: value.id,
-    })
+    await updateMasterProductMutation.mutateAsync(
+      {
+        productId: id,
+        masterProductId: value.id,
+      },
+      {
+        // NOTE: There is a bug server side, So we need to update the master product in client when master product is updated
+        onSuccess(product) {
+          const updatedProduct = { ...product, masterProduct: value }
+          showToast('Product Updated', 'success')
+
+          queryClient.setQueriesData(
+            { queryKey: ['wh-products'] },
+            (
+              oldData: { pages: Array<SearchWHProductsResponse> } | undefined,
+            ) => {
+              if (!oldData) return undefined
+
+              return {
+                ...oldData,
+                pages: oldData.pages.map(page => ({
+                  ...page,
+                  products: page.products?.map(p =>
+                    p.id === product.id ? updatedProduct : p,
+                  ),
+                })),
+              }
+            },
+          )
+        },
+      },
+    )
 
     setShowEditField(false)
     setSelectedMasterProduct(undefined)
@@ -167,16 +198,7 @@ export function WHProductCard({ product }: Props) {
             color={masterProduct?.id ? 'primary' : 'danger'}
             sx={{ px: 1, py: 0.5, borderRadius: '4px' }}
           >
-            {masterProduct?.categoryName && masterProduct.name ? (
-              <>
-                <Typography fontWeight={600}>
-                  [{masterProduct.categoryName}]
-                </Typography>{' '}
-                {masterProduct.name}
-              </>
-            ) : (
-              masterProduct?.name ?? 'Not Selected'
-            )}
+            {masterProduct?.name ?? 'Not Selected'}
           </Typography>
         )}
 

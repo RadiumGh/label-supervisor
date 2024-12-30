@@ -1,8 +1,4 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation } from '@tanstack/react-query'
 import {
   WHProductStatusType,
   SearchWHProductsResponse,
@@ -12,19 +8,16 @@ import {
   searchWHProductsRequest,
   updateWHProductMasterProductRequest,
   WH_PRODUCT_BUCKET_SIZE,
-} from './wh-product.api.ts'
-import { showToast } from '../../components/toast'
+} from './wh-product.api'
 
 export function useSearchWHProducts(
   filter: WHProductStatusType = WHProductStatusType.PENDING,
-  startId: number = 0,
 ) {
   return useInfiniteQuery<SearchWHProductsResponse>({
-    queryKey: ['wh-products', filter, startId],
+    queryKey: ['wh-products', filter],
     queryFn: async ({ pageParam }) => {
-      const skip =
-        startId + ((pageParam as number) ?? 0) * WH_PRODUCT_BUCKET_SIZE
-      return searchWHProductsRequest({ filter, startId: startId, skip })
+      const skip = ((pageParam as number) ?? 0) * WH_PRODUCT_BUCKET_SIZE
+      return searchWHProductsRequest({ filter, skip })
     },
 
     initialPageParam: 0,
@@ -36,7 +29,7 @@ export function useSearchWHProducts(
 }
 
 export function useUpdateWHProductMasterProduct() {
-  const queryClient = useQueryClient()
+  // const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({
@@ -45,26 +38,27 @@ export function useUpdateWHProductMasterProduct() {
     }: UpdateWHProductMasterProductDTO) =>
       updateWHProductMasterProductRequest({ id: productId, masterProductId }),
 
-    onSuccess: product => {
-      showToast('Product Updated', 'success')
+    // NOTE: Handled in wh-product-card component. until server-side bug gets resolved
 
-      queryClient.invalidateQueries({ queryKey: ['wh-progress'] })
-      queryClient.setQueriesData(
-        { queryKey: ['wh-products'] },
-        (oldData: { pages: Array<SearchWHProductsResponse> } | undefined) => {
-          if (!oldData) return undefined
-
-          return {
-            ...oldData,
-            pages: oldData.pages.map(page => ({
-              ...page,
-              products: page.products?.map(p =>
-                p.id === product.id ? product : p,
-              ),
-            })),
-          }
-        },
-      )
-    },
+    // onSuccess: product => {
+    //   showToast('Product Updated', 'success')
+    //
+    //   queryClient.setQueriesData(
+    //     { queryKey: ['wh-products'] },
+    //     (oldData: { pages: Array<SearchWHProductsResponse> } | undefined) => {
+    //       if (!oldData) return undefined
+    //
+    //       return {
+    //         ...oldData,
+    //         pages: oldData.pages.map(page => ({
+    //           ...page,
+    //           products: page.products?.map(p =>
+    //             p.id === product.id ? product : p,
+    //           ),
+    //         })),
+    //       }
+    //     },
+    //   )
+    // },
   })
 }
