@@ -36,7 +36,7 @@ interface Props {
   onClose?: () => void
 }
 export const WHMasterProductsAutoComplete = forwardRef(function (
-  { value, productId, onValueChange, onClose }: Props,
+  { value, onValueChange, onClose }: Props,
   ref,
 ) {
   const inputRef = useRef<HTMLInputElement>()
@@ -51,10 +51,7 @@ export const WHMasterProductsAutoComplete = forwardRef(function (
   }, [debouncedQuery])
 
   const { data, isFetching, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useSearchWHMasterProducts({
-      search: debouncedQuery,
-      similarTo: productId,
-    })
+    useSearchWHMasterProducts({ search: debouncedQuery })
 
   const items = useMemo(
     () => data?.pages.reduce((acc, page) => acc.concat(page), []) || [],
