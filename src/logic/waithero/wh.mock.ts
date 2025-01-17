@@ -1,4 +1,9 @@
-import { WHCategory, WHMasterProduct, WHProduct } from './wh.types'
+import {
+  WHCategory,
+  WHMasterProduct,
+  WHProduct,
+  WHRestaurant,
+} from './wh.types'
 
 export const mockedCategories: WHCategory[] = [
   { id: 1, name: 'Category-1' },
@@ -97,6 +102,10 @@ export const mockedProducts: WHProduct[] = [
     category: 'Pasta',
   },
 ]
+
+export const mockedRestaurants: WHRestaurant[] = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9,
+].map(id => ({ id, name: `Restaurant ${id}` }))
 
 export const generatedProducts: WHProduct[] = new Array(200)
   .fill(null)

@@ -27,6 +27,16 @@ export interface WHProduct {
   masterProduct?: WHMasterProduct
 }
 
+export interface WHRestaurant {
+  id: number
+  name: string
+}
+
+export interface SearchWHRestaurantsResponse {
+  list: WHRestaurant[]
+  totalElements: number
+}
+
 export interface SearchWHProductsResponse {
   products: WHProduct[]
   remaining: number

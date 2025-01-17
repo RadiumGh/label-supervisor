@@ -15,27 +15,23 @@ import {
   ListItemDecorator,
   Typography,
 } from '@mui/joy'
-import {
-  useSearchWHMasterProducts,
-  WHMasterProduct,
-} from '../../../logic/waithero'
 import { useDebounce } from '../../../logic'
+import { WHRestaurant, useSearchWHRestaurants } from '../../../logic/waithero'
 
-export interface MasterProductsAutoCompleteAPI {
+export interface RestaurantsAutoCompleteAPI {
   focus: () => void
 }
 
-interface IMasterProductOption extends WHMasterProduct {
+interface IRestaurantOption extends WHRestaurant {
   isLoading?: boolean
 }
 
 interface Props {
-  value?: WHMasterProduct
-  productId: number
-  onValueChange: (masterProduct?: WHMasterProduct) => void
+  value?: WHRestaurant
+  onValueChange: (restaurant?: WHRestaurant) => void
   onClose?: () => void
 }
-export const WHMasterProductsAutoComplete = forwardRef(function (
+export const WHRestaurantsAutoComplete = forwardRef(function (
   { value, onValueChange, onClose }: Props,
   ref,
 ) {
@@ -51,7 +47,7 @@ export const WHMasterProductsAutoComplete = forwardRef(function (
   }, [debouncedQuery])
 
   const { data, isFetching, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useSearchWHMasterProducts({ search: debouncedQuery })
+    useSearchWHRestaurants({ name: debouncedQuery })
 
   const items = useMemo(
     () => data?.pages.reduce((acc, page) => acc.concat(page), []) || [],
@@ -100,7 +96,7 @@ export const WHMasterProductsAutoComplete = forwardRef(function (
         typeof option === 'string' ? option : option.name
       }
       isOptionEqualToValue={(option, value) => option?.id === value?.id}
-      filterOptions={(options: IMasterProductOption[]) => {
+      filterOptions={(options: IRestaurantOption[]) => {
         if (isLoading) return []
 
         if (hasNextPage)
@@ -121,7 +117,7 @@ export const WHMasterProductsAutoComplete = forwardRef(function (
               : option,
         )
       }
-      renderOption={(props, option: IMasterProductOption) => {
+      renderOption={(props, option: IRestaurantOption) => {
         if (option.isLoading)
           return (
             <Waypoint onEnter={() => fetchNextPage()} {...props}>
@@ -137,22 +133,14 @@ export const WHMasterProductsAutoComplete = forwardRef(function (
 
         return (
           <AutocompleteOption {...props}>
-            <Typography textAlign="start">
-              {option.categoryName && (
-                <Typography sx={{ fontWeight: 600, mr: 0.5 }}>
-                  [{option.categoryName}]
-                </Typography>
-              )}
-
-              <Typography sx={{ fontWeight: 200 }}>{option.name}</Typography>
-            </Typography>
+            <Typography sx={{ fontWeight: 200 }}>{option.name}</Typography>
           </AutocompleteOption>
         )
       }}
       getOptionDisabled={option =>
         Boolean('isLoading' in option && option.isLoading)
       }
-      placeholder="Select master product..."
+      placeholder="Select Restaurant..."
       freeSolo
       selectOnFocus
       clearOnBlur

@@ -7,6 +7,7 @@ import {
   WHProductStatusType,
   useSearchWHProducts,
 } from '../../logic/waithero'
+import { WHRestaurantsAutoComplete } from './components/wh-restaurants-auto-complete.tsx'
 
 const Container = styled('div')`
   display: flex;
@@ -30,6 +31,8 @@ const ListHeader = styled('div')`
 `
 
 export function WHProducts() {
+  const [restaurantId, setRestaurantId] = useState<number>()
+
   const [filter, setFilter] = useState<WHProductStatusType>(
     WHProductStatusType.PENDING,
   )
@@ -40,7 +43,7 @@ export function WHProducts() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useSearchWHProducts(filter)
+  } = useSearchWHProducts(filter, restaurantId)
 
   const isLoading = isFetching && !isFetchingNextPage
 
@@ -63,7 +66,13 @@ export function WHProducts() {
         <WHProductStatus status={filter} setStatus={setFilter} />
       </StatusContainer>
 
-      <ListHeader>
+      <WHRestaurantsAutoComplete
+        onValueChange={restaurant => {
+          setRestaurantId(restaurant?.id ?? undefined)
+        }}
+      />
+
+      <ListHeader sx={{ mt: 2 }}>
         <Typography textAlign="start" level="title-md">
           Products
         </Typography>

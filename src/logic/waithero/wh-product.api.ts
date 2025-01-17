@@ -21,10 +21,12 @@ export const WH_PRODUCT_BUCKET_SIZE = 20
 export async function searchWHProductsRequest({
   filter,
   skip = 0,
+  idRestaurant,
 }: {
   filter: WHProductStatusType
   skip?: number
   startId?: number
+  idRestaurant?: number
 }) {
   if (MOCK_RESPONSES) {
     await waitForMockedDelay()
@@ -36,6 +38,7 @@ export async function searchWHProductsRequest({
   }
 
   const res = await WHAxiosClient.post('/product-restaurant/search', {
+    idRestaurant,
     hasMasterProduct: filter === WHProductStatusType.COMPLETED,
     pagination: {
       elementsPerPage: WH_PRODUCT_BUCKET_SIZE,

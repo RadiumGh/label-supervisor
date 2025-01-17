@@ -12,12 +12,13 @@ import {
 
 export function useSearchWHProducts(
   filter: WHProductStatusType = WHProductStatusType.PENDING,
+  idRestaurant?: number,
 ) {
   return useInfiniteQuery<SearchWHProductsResponse>({
-    queryKey: ['wh-products', filter],
+    queryKey: ['wh-products', filter, idRestaurant],
     queryFn: async ({ pageParam }) => {
       const skip = ((pageParam as number) ?? 0) * WH_PRODUCT_BUCKET_SIZE
-      return searchWHProductsRequest({ filter, skip })
+      return searchWHProductsRequest({ filter, skip, idRestaurant })
     },
 
     initialPageParam: 0,
